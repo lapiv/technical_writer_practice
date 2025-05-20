@@ -1,0 +1,149 @@
+openapi: "3.0.4"
+info:
+  title: "Eszköz API"
+  description: "'Eszköz' (Gadget/Device) nyilvántartó rendszer API-ja."
+  version: "1.0.0"
+paths:
+  /eszkozok:
+    get:
+      tags:
+        - "Eszközök"
+      summary: "Az összes eszköz listázása, szűrési lehetőséggel."
+      description: "Ez az endpoint lehetővé teszi az összes regisztrált eszköz lekérdezését az adatbázisból."
+      parameters:
+            - name: tipus
+              in: query
+              required: false
+              description: "Szűrőfeltétel az eszközök listázásához."
+              schema:
+                type: string
+                description: "Szűrés eszköz típusára."
+            - name: gyarto
+              in: query
+              required: false
+              description: "Szűrőfeltétel az eszközök listázásához."
+              schema:
+                type: string
+                description: "Szűrés gyártóra."
+            - name: raktaron
+              in: query
+              required: false
+              description: "Szűrőfeltétel az eszközök listázásához."
+              schema:
+                type: boolean
+                description: "Csak a raktáron lévő (true) vagy csak a nem raktáron lévő (false) eszközök listázása."
+      responses:
+        '200':
+          description: "Sikeres lekérdezés. A válasz törzse egy tömb, amely 'Eszköz' objektumok listáját tartalmazza a szűrési feltételeknek megfelelően (vagy az összeset, ha nincs szűrés)."
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Eszkoz'
+            application/xml:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Eszkoz'
+                xml:
+                  name: eszkozok
+                  wrapped: true
+    post:
+      tags:
+        - "Eszközök"
+      summary: "Új eszköz létrehozása."
+      description: "Ez az endpoint új eszköz regisztrálását teszi lehetővé a rendszerben."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Eszkoz'
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/Eszkoz'
+              xml:
+                name: eszkoz
+                wrapped: true
+      responses:
+        '201':
+          description: "Sikeres létrehozás esetén. A válasz törzse tartalmazza a teljes, létrehozott 'Eszköz' objektumot (beleértve a szerver által generált id-t és utolsoFrissites-t)."
+        '400':
+          description: "Hibás kérés esetén (pl. hiányzó kötelező mező)."
+  /eszkozok/{eszkozId}:
+    get:
+      tags:
+        - "Eszközök"
+      summary: "Egy konkrét eszköz lekérdezése azonosító alapján."
+      description: "Ez az endpoint egy adott eszköz részletes adatainak lekérdezésére szolgál az eszköz egyedi azonosítója (UUID) alapján."
+      parameters:
+        - name: eszkozId
+          in: path
+          required: true
+          description: "A lekérdezendő eszköz UUID-ja"
+          schema:
+            type: string
+      responses:
+        '200':
+          description: "Sikeres lekérdezés. A válasz törzse tartalmazza a megtalált 'Eszköz' objektumot."
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Eszkoz'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/Eszkoz'
+                xml:
+                  name: eszkozok
+                  wrapped: true
+        '404':
+          description: "Ha a megadott eszkozId-val nem található eszköz."
+components:
+  schemas:
+    Eszkoz:
+      type: object
+      description: "Eszköz (Gadget/Device) objektum."
+      xml:
+        name: Eszkoz
+      required:
+        - nev
+        - gyarto
+        - tipus
+        - raktaron
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: "Az eszköz egyedi azonosítója. Ezt az értéket a szerver generálja."
+          readOnly: true
+          x-serverGenerated: true
+          example: "uuid-1234-abcd-5678"
+        nev:
+          type: string
+          description: "Az eszköz neve."
+          example: "Szuper Okos Kütyü"
+        gyarto:
+          type: string
+          description: "Az eszköz gyártója."
+          example: "Tech Kft."
+        tipus:
+          type: string
+          description: "Az eszköz típusa."
+          example: ["Okosotthon", "Viselhető", "Audio", "Egyéb"]
+        ar:
+          type: number
+          format: float
+          description: "Az eszköz ára."
+          example: 150.99
+        raktaron:
+          type: boolean
+          description: "Raktáron lévő eszköz-e."
+          example: true
+        utolsoFrissites:
+          type: string
+          format: date-time
+          description: "Az utolsó frissítés időpontja. Ezt az értéket a szerver generálja."
+          readOnly: true
+          x-serverGenerated: true
+          example: "2025-04-27T20:00:00Z"
